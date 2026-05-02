@@ -1,0 +1,15 @@
+.git
+.gitignore
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.db
+instance/
+.env
+.venv
+venv/
+README.md
+implementation_plan.md
+task.md
+walkthrough.md
