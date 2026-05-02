@@ -19,6 +19,9 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db.init_app(app)
 
+with app.app_context():
+    db.create_all()
+
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
 register_events(socketio)
 

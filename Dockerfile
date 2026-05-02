@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.10-slim
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
@@ -25,4 +25,4 @@ COPY . .
 EXPOSE 8080
 
 # Run the app using gunicorn with eventlet for SocketIO
-CMD ["gunicorn", "--worker-class", "eventlet", "-w", "1", "--bind", "0.0.0.0:8080", "app:app"]
+CMD exec gunicorn --worker-class eventlet -w 1 --bind 0.0.0.0:$PORT app:app
