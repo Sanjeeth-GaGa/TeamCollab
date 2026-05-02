@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SyncTask — Login</title>
+  <meta name="description" content="Sign in to SyncTask, the real-time team coordination platform." />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0a0b14; --accent: #7c3aed; --accent2: #a78bfa;
+      --cyan: #0ea5e9; --text: #e2e8f0; --muted: #64748b;
+      --border: rgba(255,255,255,0.08); --card: rgba(255,255,255,0.04);
+      --accent-glow: rgba(124,58,237,0.35);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text);
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden;
+    }
+    .bg-orb {
+      position: absolute; border-radius: 50%; filter: blur(80px); pointer-events: none;
+    }
+    .orb1 { width: 400px; height: 400px; background: rgba(124,58,237,0.25); top: -100px; left: -100px; }
+    .orb2 { width: 350px; height: 350px; background: rgba(14,165,233,0.15); bottom: -80px; right: -80px; }
+    .orb3 { width: 200px; height: 200px; background: rgba(16,185,129,0.1); top: 50%; left: 50%; transform: translate(-50%,-50%); }
+
+    .auth-card {
+      background: rgba(17,19,31,0.8); border: 1px solid var(--border);
+      border-radius: 24px; padding: 40px; width: 90%; max-width: 420px;
+      backdrop-filter: blur(20px); position: relative; z-index: 1;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+    }
+    .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 32px; }
+    .logo-icon {
+      width: 42px; height: 42px; border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent), var(--cyan));
+      display: flex; align-items: center; justify-content: center; font-size: 20px;
+    }
+    .logo-text { font-size: 22px; font-weight: 800; letter-spacing: -0.5px;
+      background: linear-gradient(135deg, var(--accent2), var(--cyan));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    h2 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+    .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 28px; }
+    .flash { padding: 12px 14px; border-radius: 10px; margin-bottom: 20px; font-size: 13px;
+      background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25); color: #fca5a5; }
+    .form-group { margin-bottom: 18px; }
+    .form-label { display: block; font-size: 13px; font-weight: 500; color: var(--muted); margin-bottom: 6px; }
+    .form-input {
+      width: 100%; padding: 12px 16px;
+      background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+      border-radius: 12px; color: var(--text); font-size: 14px; font-family: inherit;
+      transition: all 0.2s;
+    }
+    .form-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+    .btn-submit {
+      width: 100%; padding: 13px; background: var(--accent); color: #fff;
+      border: none; border-radius: 12px; font-size: 15px; font-weight: 700;
+      cursor: pointer; font-family: inherit; transition: all 0.2s; margin-top: 6px;
+    }
+    .btn-submit:hover { background: #6d28d9; box-shadow: 0 0 30px var(--accent-glow); transform: translateY(-1px); }
+    .alt-link { text-align: center; margin-top: 20px; font-size: 13px; color: var(--muted); }
+    .alt-link a { color: var(--accent2); text-decoration: none; font-weight: 600; }
+    .alt-link a:hover { text-decoration: underline; }
+    .divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; }
+    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .divider span { color: var(--muted); font-size: 12px; }
+    .demo-hint {
+      background: rgba(124,58,237,0.08); border: 1px solid rgba(124,58,237,0.15);
+      border-radius: 10px; padding: 12px 14px; font-size: 12px; color: var(--muted);
+      line-height: 1.6;
+    }
+    .demo-hint strong { color: var(--accent2); }
+  </style>
+</head>
+<body>
+  <div class="bg-orb orb1"></div>
+  <div class="bg-orb orb2"></div>
+  <div class="bg-orb orb3"></div>
+
+  <div class="auth-card">
+    <div class="logo">
+      <div class="logo-icon">⚡</div>
+      <span class="logo-text">SyncTask</span>
+    </div>
+    <h2>Welcome back</h2>
+    <p class="subtitle">Sign in to your workspace</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}
+        <div class="flash">⚠️ {{ msg }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('login') }}" id="login-form">
+      <div class="form-group">
+        <label class="form-label" for="email">Email</label>
+        <input id="email" name="email" type="email" class="form-input" placeholder="you@team.com" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="password">Password</label>
+        <input id="password" name="password" type="password" class="form-input" placeholder="••••••••" required />
+      </div>
+      <button type="submit" class="btn-submit">Sign In →</button>
+    </form>
+
+    <div class="divider"><span>or</span></div>
+
+    <div class="demo-hint">
+      🚀 <strong>Demo accounts</strong><br>
+      alice@demo.com / password (admin)<br>
+      bob@demo.com / password (member)<br>
+      <em>Visit <a href="/seed" style="color:var(--accent2);">/seed</a> to load demo data first.</em>
+    </div>
+
+    <div class="alt-link" style="margin-top:18px;">
+      Don't have an account? <a href="{{ url_for('register') }}">Create one</a>
+    </div>
+  </div>
+</body>
+</html>

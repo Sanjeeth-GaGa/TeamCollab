@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% block title %}Team Chat{% endblock %}
+{% block page_title %}💬 Team Chat{% endblock %}
+
+{% block head %}
+<style>
+  .chat-layout {
+    display: grid; grid-template-columns: 200px 1fr;
+    gap: 20px; height: calc(100vh - 140px);
+  }
+  .rooms-panel {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 6px;
+  }
+  .rooms-title { font-size: 12px; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .room-btn {
+    display: flex; align-items: center; gap: 8px; padding: 9px 12px;
+    border-radius: 10px; border: none; background: none; color: var(--muted);
+    font-size: 13px; font-weight: 500; cursor: pointer; text-align: left;
+    transition: all 0.2s; width: 100%; font-family: inherit;
+  }
+  .room-btn:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+  .room-btn.active { background: rgba(124,58,237,0.15); color: var(--accent2);
+    border: 1px solid rgba(124,58,237,0.2); }
+  .room-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green);
+    animation: pulse 2s infinite; flex-shrink: 0; }
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+
+  .chat-main { display: flex; flex-direction: column; gap: 0;
+    background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+  .chat-header {
+    padding: 16px 20px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .chat-header .room-name { font-size: 16px; font-weight: 700; }
+  .chat-header .room-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .online-pill { margin-left: auto; display: flex; align-items: center; gap: 6px;
+    background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2);
+    border-radius: 20px; padding: 4px 10px; font-size: 12px; color: var(--green); }
+
+  .messages-area { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+  .msg { display: flex; gap: 10px; align-items: flex-start; animation: fadeUp 0.2s ease; }
+  .msg.mine { flex-direction: row-reverse; }
+  @keyframes fadeUp { from {opacity:0;transform:translateY(8px);} to {opacity:1;transform:translateY(0);} }
+  .msg-bubble {
+    max-width: 65%; padding: 10px 14px; border-radius: 16px;
+    font-size: 13px; line-height: 1.6; word-break: break-word;
+    background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+  }
+  .msg.mine .msg-bubble { background: rgba(124,58,237,0.2); border-color: rgba(124,58,237,0.3); }
+  .msg-meta { font-size: 11px; color: var(--muted); margin-top: 4px; display: flex; gap: 6px; align-items: center; }
+  .msg.mine .msg-meta { justify-content: flex-end; }
+  .system-msg {
+    text-align: center; font-size: 12px; color: var(--muted);
+    background: rgba(255,255,255,0.03); border-radius: 8px; padding: 6px 14px;
+    border: 1px solid var(--border);
+  }
+
+  .chat-input-row {
+    padding: 14px 16px; border-top: 1px solid var(--border);
+    display: flex; gap: 10px; align-items: center;
+  }
+  #msg-input {
+    flex: 1; padding: 11px 16px; background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border); border-radius: 12px; color: var(--text);
+    font-size: 14px; font-family: inherit; outline: none; transition: border-color 0.2s;
+  }
+  #msg-input:focus { border-color: var(--accent); }
+  #send-btn {
+    width: 44px; height: 44px; background: var(--accent); border: none;
+    border-radius: 12px; color: #fff; font-size: 18px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0;
+  }
+  #send-btn:hover { background: #6d28d9; box-shadow: 0 0 20px var(--accent-glow); }
+
+  @media (max-width: 640px) { .chat-layout { grid-template-columns: 1fr; } .rooms-panel { display: none; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="chat-layout">
+  <!-- Rooms -->
+  <div class="rooms-panel">
+    <div class="rooms-title">💬 Rooms</div>
+    {% set rooms = [('general','# general','Team-wide'),('dev','# dev','Engineering'),('design','# design','Designers'),('ops','# ops','Operations')] %}
+    {% for room_id, label, desc in rooms %}
+    <button class="room-btn {% if loop.first %}active{% endif %}" id="room-{{ room_id }}"
+            onclick="switchRoom('{{ room_id }}', '{{ label }}', '{{ desc }}')">
+      <div class="room-dot"></div> {{ label }}
+    </button>
+    {% endfor %}
+  </div>
+
+  <!-- Chat -->
+  <div class="chat-main">
+    <div class="chat-header">
+      <div>
+        <div class="room-name" id="room-display-name"># general</div>
+        <div class="room-desc" id="room-display-desc">Team-wide</div>
+      </div>
+      <div class="online-pill">
+        <div style="width:6px;height:6px;border-radius:50%;background:var(--green);"></div>
+        Online
+      </div>
+    </div>
+
+    <div class="messages-area" id="messages-area">
+      <div class="system-msg">🔐 Welcome to SyncTask Chat. Be respectful!</div>
+    </div>
+
+    <div class="chat-input-row">
+      <input id="msg-input" type="text" placeholder="Type a message… (Enter to send)" autocomplete="off" />
+      <button id="send-btn" onclick="sendMessage()">➤</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const socket = io();
+const me = '{{ current_user.nickname or current_user.username }}';
+const myColor = '{{ current_user.avatar_color }}';
+let currentRoom = 'general';
+
+socket.emit('join', { room: currentRoom });
+
+function switchRoom(roomId, label, desc) {
+  socket.emit('leave', { room: currentRoom });
+  currentRoom = roomId;
+  socket.emit('join', { room: currentRoom });
+  document.querySelectorAll('.room-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('room-' + roomId).classList.add('active');
+  document.getElementById('room-display-name').textContent = label;
+  document.getElementById('room-display-desc').textContent = desc;
+  document.getElementById('messages-area').innerHTML = '<div class="system-msg">Joined ' + label + '</div>';
+}
+
+socket.on('receive_message', data => {
+  addMessage(data, data.username === me);
+});
+socket.on('status', data => {
+  const area = document.getElementById('messages-area');
+  const el = document.createElement('div');
+  el.className = 'system-msg';
+  el.textContent = data.msg;
+  area.appendChild(el);
+  area.scrollTop = area.scrollHeight;
+});
+
+function addMessage(data, mine) {
+  const area = document.getElementById('messages-area');
+  const div = document.createElement('div');
+  div.className = 'msg' + (mine ? ' mine' : '');
+  div.innerHTML = `
+    <div class="avatar avatar-sm" style="background:${data.avatar_color}">${data.username[0].toUpperCase()}</div>
+    <div>
+      <div class="msg-bubble">${escHtml(data.content)}</div>
+      <div class="msg-meta">
+        ${!mine ? `<strong style="color:var(--text)">${escHtml(data.username)}</strong>` : ''}
+        <span>${data.timestamp}</span>
+      </div>
+    </div>`;
+  area.appendChild(div);
+  area.scrollTop = area.scrollHeight;
+}
+
+function sendMessage() {
+  const input = document.getElementById('msg-input');
+  const content = input.value.trim();
+  if (!content) return;
+  socket.emit('send_message', { room: currentRoom, content });
+  // optimistic append
+  addMessage({
+    username: me,
+    avatar_color: myColor,
+    content,
+    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  }, true);
+  input.value = '';
+}
+
+document.getElementById('msg-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+});
+
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+</script>
+{% endblock %}

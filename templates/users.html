@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}User Management{% endblock %}
+{% block page_title %}👥 Team Members{% endblock %}
+
+{% block head %}
+<style>
+  .users-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; margin-bottom: 28px; }
+  .user-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+    padding: 20px; display: flex; align-items: center; gap: 14px;
+    transition: all 0.2s; position: relative; overflow: hidden;
+  }
+  .user-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; }
+  .user-card:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(0,0,0,0.3); }
+  .user-card-info { flex: 1; min-width: 0; }
+  .user-card-name { font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-card-email { font-size: 12px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-card-meta { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+  .user-card-actions { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+  .task-stat { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--muted); }
+  .task-stat strong { color: var(--text); font-size: 14px; font-weight: 700; }
+
+  .summary-bar {
+    background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+    padding: 20px 24px; margin-bottom: 24px;
+    display: flex; align-items: center; gap: 32px;
+  }
+  .summary-item { text-align: center; }
+  .summary-item .val { font-size: 28px; font-weight: 800; }
+  .summary-item .lbl { font-size: 12px; color: var(--muted); margin-top: 2px; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Summary Bar -->
+<div class="summary-bar">
+  <div class="summary-item">
+    <div class="val">{{ users|length }}</div>
+    <div class="lbl">Total Members</div>
+  </div>
+  <div class="summary-item">
+    <div class="val" style="color:var(--accent2)">{{ users|selectattr('role','equalto','admin')|list|length }}</div>
+    <div class="lbl">Admins</div>
+  </div>
+  <div class="summary-item">
+    <div class="val" style="color:var(--cyan)">{{ users|selectattr('role','equalto','member')|list|length }}</div>
+    <div class="lbl">Members</div>
+  </div>
+</div>
+
+<!-- User Cards -->
+<div class="users-grid">
+  {% for u in users %}
+  <div class="user-card" id="user-card-{{ u.id }}" style="border-left: 4px solid {{ u.avatar_color }};">
+    <div class="avatar avatar-lg" style="background:{{ u.avatar_color }}">{{ u.username[0].upper() }}</div>
+    <div class="user-card-info">
+      <div class="user-card-name">{{ u.nickname or u.username }}</div>
+      <div class="user-card-email">{{ u.email }} <span style="font-size:10px; opacity:0.6">(@{{ u.username }})</span></div>
+      <div class="user-card-meta">
+        <span class="badge badge-{{ u.role }}" id="role-badge-{{ u.id }}">{{ u.role }}</span>
+        <span class="task-stat">📋 <strong>{{ u.tasks_assigned|length }}</strong> tasks</span>
+      </div>
+    </div>
+    <div class="user-card-actions">
+      {% if u.id != current_user.id %}
+      <button class="btn btn-ghost btn-sm" onclick="toggleRole({{ u.id }}, '{{ u.role }}')"
+              id="role-btn-{{ u.id }}" title="Toggle role">
+        {{ '↓ Demote' if u.role == 'admin' else '↑ Promote' }}
+      </button>
+      <button class="btn btn-danger btn-sm" onclick="deleteUser({{ u.id }}, '{{ u.username }}')" title="Remove user">
+        🗑 Remove
+      </button>
+      {% else %}
+      <span style="font-size:12px;color:var(--muted);">You</span>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function toggleRole(userId, currentRole) {
+  const newRole = currentRole === 'admin' ? 'member' : 'admin';
+  const res = await fetch(`/api/users/${userId}/role`, {
+    method: 'PATCH', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ role: newRole })
+  });
+  if (res.ok) {
+    document.getElementById('role-badge-' + userId).textContent = newRole;
+    document.getElementById('role-badge-' + userId).className = 'badge badge-' + newRole;
+    const btn = document.getElementById('role-btn-' + userId);
+    btn.textContent = newRole === 'admin' ? '↓ Demote' : '↑ Promote';
+    // Store new role on button
+    btn.setAttribute('onclick', `toggleRole(${userId}, '${newRole}')`);
+    showToast(`${newRole === 'admin' ? 'Promoted to admin' : 'Demoted to member'}`);
+  } else { showToast('Failed to update role', 'error'); }
+}
+
+async function deleteUser(userId, username) {
+  if (!confirm(`Remove ${username} from the platform? This will also delete their tasks.`)) return;
+  const res = await fetch(`/api/users/${userId}`, { method: 'DELETE' });
+  if (res.ok) {
+    document.getElementById('user-card-' + userId).remove();
+    showToast(`${username} removed.`);
+  } else {
+    const d = await res.json();
+    showToast(d.error || 'Delete failed', 'error');
+  }
+}
+</script>
+{% endblock %}

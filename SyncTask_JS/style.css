@@ -1,0 +1,113 @@
+:root {
+  --bg-main: #F3F4F6;
+  --sidebar: #0D121F;
+  --surface: #FFFFFF;
+  --accent: #6D28D9;
+  --accent-gradient: linear-gradient(135deg, #6D28D9 0%, #9333EA 100%);
+  --border: #E5E7EB;
+  --text-primary: #111827;
+  --text-secondary: #6B7280;
+  --success: #059669;
+  --success-bg: #D1FAE5;
+  --warning: #D97706;
+  --warning-bg: #FEF3C7;
+  --danger: #DC2626;
+  --danger-bg: #FEE2E2;
+  --radius-lg: 24px;
+  --radius-md: 16px;
+  --shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg-main);
+  color: var(--text-primary);
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── Sidebar (Figma Style) ── */
+.sidebar {
+  width: 260px; background: var(--sidebar);
+  display: flex; flex-direction: column; padding: 32px 0;
+  color: #fff;
+}
+.logo { padding: 0 24px; margin-bottom: 40px; display: flex; align-items: center; gap: 12px; font-size: 20px; font-weight: 800; }
+.logo-icon { width: 36px; height: 36px; background: var(--accent-gradient); border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+
+.nav-item {
+  padding: 14px 24px; color: #9CA3AF; text-decoration: none; font-size: 14px; font-weight: 500;
+  display: flex; align-items: center; gap: 14px; transition: 0.3s; margin: 4px 16px; border-radius: 12px;
+}
+.nav-item:hover { color: #fff; background: rgba(255,255,255,0.05); }
+.nav-item.active { background: var(--accent-gradient); color: #fff; box-shadow: 0 4px 15px rgba(109, 40, 217, 0.3); }
+
+/* ── Main Content ── */
+main { flex: 1; padding: 40px; overflow-y: auto; }
+.view { display: none; }
+.view.active { display: block; }
+
+h1 { font-size: 32px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 8px; }
+.subtitle { color: var(--text-secondary); margin-bottom: 40px; font-size: 16px; }
+
+/* ── Metric Cards ── */
+.metrics-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 40px; }
+.metric-card { 
+  background: var(--surface); padding: 28px; border-radius: var(--radius-lg); 
+  box-shadow: var(--shadow); position: relative; border: 1px solid var(--border);
+}
+.metric-card .label { font-size: 14px; color: var(--text-secondary); font-weight: 600; margin-bottom: 12px; display: block; }
+.metric-card .value { font-size: 32px; font-weight: 800; color: var(--text-primary); }
+.trend-badge { 
+  position: absolute; top: 24px; right: 24px; padding: 4px 10px; 
+  border-radius: 20px; font-size: 12px; font-weight: 700; background: var(--success-bg); color: var(--success); 
+}
+
+/* ── Progress Cards (Project Cards) ── */
+.project-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+.project-card { 
+  background: var(--surface); padding: 32px; border-radius: var(--radius-lg); 
+  box-shadow: var(--shadow); border: 1px solid var(--border);
+}
+.status-pill { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; text-transform: capitalize; }
+.status-on-track { background: var(--success-bg); color: var(--success); }
+.status-at-risk { background: var(--warning-bg); color: var(--warning); }
+
+.progress-container { height: 8px; background: #E5E7EB; border-radius: 10px; margin: 20px 0; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--accent-gradient); border-radius: 10px; transition: 0.5s; }
+
+/* ── Dashboard Lists (Inbox / To-Do) ── */
+.overview-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+.widget { background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--shadow); border: 1px solid var(--border); overflow: hidden; }
+.widget-header { padding: 24px 32px; border-bottom: 1px solid var(--border); font-weight: 800; display: flex; justify-content: space-between; font-size: 18px; }
+
+.notification-item { padding: 20px 32px; border-bottom: 1px solid var(--border); display: flex; gap: 16px; align-items: center; transition: 0.2s; }
+.notification-item:last-child { border: none; }
+.notification-item:hover { background: #F9FAFB; }
+.notif-bubble { width: 40px; height: 40px; border-radius: 12px; background: #F0F9FF; display: flex; align-items: center; justify-content: center; color: var(--accent); font-weight: 700; }
+
+.todo-item { padding: 18px 32px; display: flex; align-items: center; gap: 16px; border-bottom: 1px solid var(--border); }
+.todo-check { width: 22px; height: 22px; border: 2px solid var(--border); border-radius: 6px; cursor: pointer; }
+
+/* ── Modals & Buttons ── */
+.btn { 
+  background: var(--accent-gradient); color: #fff; border: none; padding: 12px 24px; 
+  border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(109, 40, 217, 0.2); 
+}
+.btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(109, 40, 217, 0.3); }
+
+.modal-overlay { position: fixed; inset: 0; background: rgba(13, 18, 31, 0.85); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 1000; }
+.modal-overlay.open { display: flex; }
+.modal { background: #fff; width: 440px; padding: 48px; border-radius: 32px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); text-align: center; }
+
+/* ── Floating Chat ── */
+.chat-fab {
+    position: fixed; bottom: 40px; right: 40px;
+    width: 64px; height: 64px; background: var(--accent-gradient);
+    color: #fff; border-radius: 20px; display: flex; align-items: center; justify-content: center;
+    font-size: 28px; cursor: pointer; box-shadow: 0 10px 30px rgba(109, 40, 217, 0.4);
+    z-index: 2000; transition: 0.3s;
+}
+.chat-fab:hover { transform: rotate(5deg) scale(1.1); }
